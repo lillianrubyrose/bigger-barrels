@@ -1,13 +1,13 @@
 package net.fsmdev.biggerbarrels.mixin;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BarrelBlockEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.GenericContainerScreenHandler;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BarrelBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,20 +19,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(BarrelBlockEntity.class)
 public abstract class BarrelBlockEntityMixin {
     @Accessor
-    abstract void setInventory(DefaultedList<ItemStack> inventory);
+    abstract void setItems(NonNullList<ItemStack> items);
 
     /**
      * @author FsmDev
      * @reason Changes size depending on setting
      */
     @Overwrite
-    public int size() {
+    public int getContainerSize() {
         return 54;
     }
 
     @Inject(method="<init>", at=@At("RETURN"))
     private void init(BlockPos pos, BlockState state, CallbackInfo ci) {
-        setInventory(DefaultedList.ofSize(this.size(), ItemStack.EMPTY));
+        setItems(NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY));
     }
 
     /**
@@ -40,7 +40,7 @@ public abstract class BarrelBlockEntityMixin {
      * @reason Changes grid depending on size
      */
     @Overwrite
-    public ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
-        return GenericContainerScreenHandler.createGeneric9x6(syncId, playerInventory, (BarrelBlockEntity) (Object) this);
+    public AbstractContainerMenu createMenu(int syncId, Inventory playerInventory) {
+        return ChestMenu.sixRows(syncId, playerInventory, (BarrelBlockEntity) (Object) this);
     }
 }
